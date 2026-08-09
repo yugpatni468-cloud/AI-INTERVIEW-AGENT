@@ -1,224 +1,251 @@
-# AI Usage Log — VicoDathon 2026
+# AI Usage Log — AI Interview Agent
+
+## Hackathon
+**VicoDathon 2026**
 
 ## Project
+**AI Interview Agent**
 
-**AI Interview Agent** — an AI-powered technical interview system that personalizes interviews using a candidate's learning journey.
+## Purpose
 
-The project consists of a FastAPI backend and a React/Vite frontend. The backend handles candidate analysis, curriculum selection, interview sessions, adaptive questioning, answer classification, deterministic scoring, and AI-generated feedback.
+AI was used during development to assist with application architecture, coding, debugging, UI improvements, interview logic, and deployment troubleshooting.
+
+The final implementation was reviewed, integrated, tested, and deployed by the team.
 
 ---
 
 ## AI Tools Used
 
-During development, the team used the following AI-assisted development tools:
-
-- **ChatGPT** — architecture guidance, debugging, code explanations, API testing guidance, prompt design, and implementation planning.
-- **Claude** — repository/code review, architecture review, implementation planning, and assistance with backend/frontend integration.
-- **Cursor** — codebase inspection and AI-assisted code modifications/integration.
-
-AI tools were used as development assistants. Final code was reviewed, tested, and validated by the team.
+- **ChatGPT** — coding assistance, debugging, architecture discussions, UI improvements, deployment guidance, and documentation.
+- **Google Gemini** — used by the application itself to generate interview questions and evaluate candidate answers.
 
 ---
 
-## Major AI-Assisted Tasks
+# Development Prompt Log
 
-### 1. Project Architecture Review
+## 1. Project Architecture
 
-AI was asked to inspect the existing AI Interview Agent architecture and identify missing functionality.
+**Prompt:**
 
-Representative prompt:
+> Help design an AI-powered technical interview application where candidates are selected based on their learning journey and the interview questions are generated dynamically according to their completed curriculum.
 
-> Review the existing FastAPI backend against the hackathon requirements. Identify what is already implemented, what is missing, bugs in the current implementation, and provide a prioritized implementation plan.
+**Purpose:**
 
-This resulted in identification of the main gaps:
-
-- No complete multi-turn interview loop
-- Missing session/memory layer
-- Missing adaptive interview orchestration
-- Missing `/interview/answer`
-- Missing `/interview/finish`
-- Missing deterministic scoring
-- Frontend/backend integration gaps
-- Candidate personalization issues
+Used to plan the overall candidate → interview → answer → evaluation workflow.
 
 ---
 
-### 2. Candidate Personalization
+## 2. Candidate Analysis
 
-AI identified an issue where failed missions could be lost during candidate analysis.
+**Prompt:**
 
-Representative requirement:
+> Create a candidate analyzer that reads candidate data, separates passed, failed, and skipped missions, and determines an attempts-based prior such as Strong, Moderate, or Fragile.
 
-> Make sure PASSED, FAILED, and SKIPPED missions are treated as separate states because failed topics are important weak-concept signals.
+**Purpose:**
 
-The candidate analyzer was updated to preserve failed-topic information and make it available to the interview engine.
-
----
-
-### 3. Interview Session and Memory
-
-AI was used to design an in-memory session architecture because the hackathon did not require a database.
-
-The session design tracks information such as:
-
-- Session ID
-- Candidate ID
-- Current day/topic
-- Questions asked
-- Distinct curriculum days
-- Transcript
-- Answer classifications
-- Follow-up count
-- Difficulty state
-- Running scores
-- Coverage information
-
-This enables the interview to continue across multiple API requests instead of generating only one independent question.
+Used to build the candidate-analysis logic that determines which curriculum days are eligible for an interview.
 
 ---
 
-### 4. Adaptive Interviewing
+## 3. Curriculum-Aware Interview Logic
 
-AI helped design the adaptive questioning logic.
+**Prompt:**
 
-The intended behavior is:
+> Implement an interview engine that selects eligible curriculum days, tracks the interview session, records questions and answers, and adapts question difficulty based on the candidate's previous performance.
 
-```text
-STRONG answer
-    → increase difficulty / move forward
+**Purpose:**
 
-PARTIAL answer
-    → targeted follow-up
-
-WEAK answer
-    → simpler or foundational follow-up
-```
-
-A follow-up limit is used so that the interview continues to cover multiple curriculum days.
+Used to develop the deterministic interview-session and question-scheduling logic.
 
 ---
 
-### 5. Hackathon Constraints
+## 4. Adaptive Difficulty
 
-The interview was designed around the required minimum:
+**Prompt:**
 
-- At least **8 questions**
-- At least **4 distinct curriculum days**
+> Design an adaptive difficulty system with recall, applied, and system-level question tiers, where the difficulty changes according to the candidate's previous performance.
 
-AI was used to reason about how follow-ups could accidentally consume the entire interview without reaching the required number of distinct days. The interview engine therefore prioritizes new days when necessary.
+**Purpose:**
 
----
-
-### 6. LLM Answer Classification
-
-AI was used to design structured answer classification rather than relying on free-form LLM output.
-
-Expected classification structure:
-
-```json
-{
-  "quality": "STRONG | PARTIAL | WEAK",
-  "gap_type": "...",
-  "rationale": "..."
-}
-```
-
-Malformed responses and LLM failures are intended to be handled safely rather than crashing the interview.
+Used for the `L1_RECALL`, `L2_APPLIED`, and `L3_SYSTEM` difficulty levels.
 
 ---
 
-### 7. Deterministic Scoring
+## 5. Follow-up Questions
 
-A key design decision was to keep numeric scoring in Python rather than asking the LLM to invent scores.
+**Prompt:**
 
-Conceptually:
+> Implement interview follow-up logic where partial or weak answers can trigger a follow-up question on the same topic, while limiting the number of follow-ups.
 
-```text
-STRONG  → 2 points
-PARTIAL → 1 point
-WEAK    → 0 points
-```
+**Purpose:**
 
-The LLM can generate the final narrative feedback, while the structured numerical results remain deterministic and reproducible.
+Used to make the interview adaptive instead of simply asking a fixed sequence of questions.
 
 ---
 
-### 8. Frontend / Backend Integration
+## 6. Answer Evaluation
 
-AI was used to help connect the React/Vite frontend to the FastAPI backend.
+**Prompt:**
 
-The intended live flow is:
+> Design structured answer classification for an AI interview. Classify answers as Strong, Partial, or Weak and identify possible gaps such as lack of depth, trade-off awareness, implementation grounding, hedging, or confidently incorrect answers.
 
-```text
-React Candidate Selection
-        ↓
-GET /candidates
-        ↓
-POST /interview/start
-        ↓
-Display Question
-        ↓
-POST /interview/answer
-        ↓
-Adaptive Next Question
-        ↓
-8+ Questions / 4+ Days
-        ↓
-POST /interview/finish
-        ↓
-Scorecard + AI Feedback
-```
+**Purpose:**
 
-The goal was to replace mocked interview behavior with the actual backend APIs.
+Used for the structured answer-evaluation model.
 
 ---
 
-### 9. Debugging and Development Support
+## 7. Backend API
 
-AI was also used during development to diagnose issues including:
+**Prompt:**
 
-- FastAPI/Uvicorn startup errors
-- Missing environment variables
-- Gemini/Groq API configuration
-- Git/GitHub workflow issues
-- Python dependency problems
-- API endpoint testing through Swagger
-- Frontend/backend integration problems
+> Build FastAPI routes for starting an interview, submitting an answer, and finishing an interview. Return the current question, topic, progress, and readiness information to the frontend.
 
-The team manually applied and tested fixes rather than relying solely on AI-generated output.
+**Purpose:**
+
+Used to implement the main interview API endpoints.
 
 ---
 
-## Human Review and Validation
+## 8. React Frontend
 
-AI-generated code and recommendations were not treated as automatically correct.
+**Prompt:**
 
-The team reviewed changes and used:
+> Build a React frontend for an AI technical interviewer with candidate cards, candidate selection, interview questions, answer input, progress tracking, follow-up indicators, and final scorecard display.
 
-- FastAPI Swagger documentation
-- Local API requests
-- Python compilation checks
-- Automated tests
-- Frontend build checks
-- Git diff/status review
-- Manual end-to-end testing
+**Purpose:**
 
-API keys and other secrets were kept outside the source repository in environment variables.
+Used to implement the frontend interface and connect it with the FastAPI backend.
 
 ---
 
-## AI's Role in the Final Product
+## 9. Frontend–Backend Integration
 
-AI assisted with:
+**Prompt:**
 
-- Code generation
-- Architecture analysis
-- Debugging
-- Prompt engineering
-- API design
-- Testing strategy
-- Frontend/backend integration
+> Connect the React frontend with the FastAPI backend using API requests for candidates, starting interviews, submitting answers, and finishing interviews. Handle loading and error states.
 
-The final implementation was reviewed and validated by the development team.
+**Purpose:**
 
-AI tools were therefore used as **development assistants**, while the team remained responsible for implementation decisions, integration, testing, and the final submitted product.
+Used to integrate the deployed application components.
+
+---
+
+## 10. UI/UX Improvements
+
+**Prompt:**
+
+> Improve the interview application's interface to make it more modern, unique, and attractive while keeping a black base and introducing green and red accent colors.
+
+**Purpose:**
+
+Used to improve the visual identity of the application without changing backend functionality.
+
+---
+
+## 11. Deployment and CORS
+
+**Prompt:**
+
+> Help deploy the React frontend and FastAPI backend and configure CORS so the deployed frontend can communicate with the deployed backend.
+
+**Purpose:**
+
+Used during deployment and troubleshooting of the production frontend-backend connection.
+
+---
+
+## 12. Debugging
+
+**Prompt:**
+
+> Debug the interview flow when the application reports "No valid curriculum day found" and identify the cause in the backend interview route and curriculum selection logic.
+
+**Purpose:**
+
+Used to troubleshoot the interview-start flow.
+
+---
+
+## 13. Candidate Data Debugging
+
+**Prompt:**
+
+> Debug why the frontend is displaying generic candidate names such as Candidate 1 and Candidate 2 instead of the actual candidate information from the JSON data.
+
+**Purpose:**
+
+Used to correct candidate-data normalization and frontend display.
+
+---
+
+## 14. Final Testing
+
+**Prompt:**
+
+> Review the complete frontend and backend interview flow and identify issues that could prevent a deployed interview from working correctly.
+
+**Purpose:**
+
+Used for final testing and deployment verification.
+
+---
+
+# AI-Assisted Application Behavior
+
+The application uses AI during the actual interview process.
+
+### Question Generation
+
+Gemini receives candidate and curriculum context and generates technical interview questions.
+
+### Answer Evaluation
+
+Gemini evaluates submitted answers and classifies their quality.
+
+### Adaptive Interview
+
+The backend uses the evaluation to determine whether to:
+
+- ask a follow-up question,
+- increase question difficulty,
+- decrease question difficulty,
+- move to another eligible curriculum day.
+
+The deterministic interview engine remains responsible for session state, eligibility, question counts, day coverage, and interview completion.
+
+---
+
+# Human Review and Integration
+
+AI-generated suggestions and code were not used blindly.
+
+The team:
+
+- reviewed generated code,
+- integrated the required components,
+- tested the frontend and backend,
+- debugged API and deployment issues,
+- verified the interview flow,
+- modified the UI,
+- and deployed the final application.
+
+---
+
+# Final Deployment
+
+**Frontend:**
+
+https://ai-interview-agent-seven-roan.vercel.app/
+
+The application was tested after deployment to verify that the frontend and backend communicate successfully.
+
+---
+
+## Summary
+
+AI was used as a development assistant and as part of the application's interview intelligence.
+
+The final project combines:
+
+**React frontend + FastAPI backend + candidate analysis + curriculum-aware scheduling + Gemini question generation + AI answer evaluation + adaptive follow-ups + scoring.**
