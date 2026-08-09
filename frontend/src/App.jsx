@@ -254,7 +254,7 @@ function App() {
       candidate.member?.role ||
       candidate.role ||
       candidate.member?.title ||
-      "AI Cohort"
+      "Technical Candidate"
     );
   }
 
