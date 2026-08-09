@@ -14,15 +14,16 @@ app = FastAPI(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-    "http://localhost:5173",
-    "http://127.0.0.1:5173",
-    "https://ai-interview-agent-seven-roan.vercel.app",
-],
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+        "https://ai-interview-agent-seven-roan.vercel.app",
+        "https://ai-interview-agent-three-orcin.vercel.app",
+        "https://ai-interview-agent-69n34gsad-code-xverse.vercel.app",
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
 
 app.include_router(
     candidates_router
